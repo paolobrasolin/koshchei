@@ -13,6 +13,7 @@ Best practices:
 - https://riseup.net/it/security/message-security/openpgp/gpg-best-practices
 
 Amazing general guides:
+- https://github.com/drduh/YubiKey-Guide
 - https://rzetterberg.github.io/yubikey-gpg-nixos.html
 - https://www.monperrus.net/martin/store-data-paper
 
