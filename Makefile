@@ -1,50 +1,30 @@
 log := @printf "\n\u001b[7m ■ %s \u001b[0m\n"
 
-#=[ Converting original file to QR codes ]======================================
+private-keyring.gpg:
+	gpg2 --export-secret-keys > $@
 
-%.source: %
-	$(log) "Copy original file"
-	cp $< $@
+private-keyring.armored.txt:
+	gpg2 --export-secret-keys --armor > $@
 
-%.source-parts: %.source
-	$(log) "Create folder for parts"
-	mkdir -p $@
-	$(log) "Split source files into parts"
-	split --bytes=1273 $* $@/
+JAB_ECC := 10
+JAB_COL := 8
 
-%.source-codes: %.source-parts
-	$(log) "Create folder for QR codes"
-	mkdir -p $@
-	$(log) "Generate QR codes"
-	for f in $</*; do cat $$f | qrencode -l L -8 -t PNG -o $@/$$(basename $$f).png; done
+JAB_NUM := 6
+JAB_POS := 0 2 4 8 10 20
+JAB_VER := $(shell printf "20 21 %.0s" {1..$(JAB_NUM)})
 
-#=[ Converting QR codes to recovered file ]=====================================
+private-keyring.jabcode.png: private-keyring.gpg
+	jabcodeWriter \
+		--input-file $< \
+		--output $@ \
+		--color-number $(JAB_COL) \
+		--ecc-level $(JAB_ECC) \
+		--symbol-number $(JAB_NUM) \
+		--symbol-position $(JAB_POS) \
+		--symbol-version $(JAB_VER)
 
-%.target-codes:
-	echo "You should provide the input images yourself."
-	exit 1
+private-keyring.jabcode.pdf: private-keyring.jabcode.typ private-keyring.jabcode.png
+	typst compile $< $@
 
-%.target-parts: %.target-codes
-	$(log) "Create folder for parts"
-	mkdir -p $@
-	$(log) "Read QR codes"
-	for f in $</*; do zbarimg -Sbinary $$f > $@/$$(basename $$f); done
-
-%.target: %.target-parts
-	$(log) "Join parts"
-	cat $</* >> $@
-
-#=[ Use test data to check mechanism works ]====================================
-
-test-data.bin:
-	$(log) "Generate test data"
-	dd if=/dev/urandom bs=2953 count=4 status=none > $@
-
-test-data.bin.target-codes: test-data.bin.source-codes
-	$(log) "Fake QR recovery"
-	cp -r $< $@
-
-%.check: %.source %.target
-	$(log) "Check source and target match"
-	diff $^
-
+private-keyring.armored.pdf: private-keyring.armored.typ private-keyring.armored.txt
+	typst compile $< $@
