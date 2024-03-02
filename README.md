@@ -2,6 +2,11 @@
 
 This repo contains the operationalization of a strategy to physically backup a GPG keyring.
 
+## TODO
+
+- [ ] ensure jabcode print quality
+- [ ] get yubikey
+
 ## References
 
 Best practices:
